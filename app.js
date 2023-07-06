@@ -1,15 +1,19 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const admin = require('firebase-admin');
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 
 const app = express();
+
 
 const router = express.Router();
 
 const PORT = process.env.PORT || 3000;
 
-const serviceAccount = require('./service-account.json');
+const serviceAccount = process.env.environ=='prod' ? require('./service-account-prod.json') : require('./service-account.json');
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),

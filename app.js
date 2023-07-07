@@ -2,14 +2,14 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const admin = require('firebase-admin');
 const dotenv = require('dotenv');
+const cors = require("cors");
 
 dotenv.config();
 
-
 const app = express();
 
-
 const router = express.Router();
+
 
 const PORT = process.env.PORT || 3000;
 
@@ -19,11 +19,15 @@ admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
 });
 
+app.use(cors());
+
 app.use(bodyParser.json());
 
 app.use(express.json());
 
 app.use('/api/v1', router);
+
+app.use
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}.`);
@@ -31,7 +35,6 @@ app.listen(PORT, () => {
 
 router.get('/getUserDataByEmail', (req, res) => {
     const { email } = req.query;
-    console.log(req.query);
     admin.auth().getUserByEmail(email)
         .then((userRecord) => {
             // Successfully retrieved the user data

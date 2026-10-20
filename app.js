@@ -33,12 +33,30 @@ app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}.`);
 });
 
-router.get('/getUserDataByEmail', (req, res) => {
+// Looks up a collaborator by email. Callers should send their Firebase ID token.
+// App versions up to 1.5.0+35 send none, so a missing token is only rejected
+// once REQUIRE_AUTH=true is set.
+router.get('/getUserDataByEmail', async (req, res) => {
     const { email } = req.query;
+    const match = (req.headers.authorization || '').match(/^Bearer (.+)$/);
+    if (match) {
+        try {
+            await admin.auth().verifyIdToken(match[1]);
+        } catch (error) {
+            return res.status(401).send('Invalid token');
+        }
+    } else if (process.env.REQUIRE_AUTH === 'true') {
+        return res.status(401).send('Missing token');
+    }
     admin.auth().getUserByEmail(email)
         .then((userRecord) => {
-            // Successfully retrieved the user data
-            res.status(200).json(userRecord);
+            // Only what the app needs; the full record has providers, metadata, phone number etc.
+            res.status(200).json({
+                uid: userRecord.uid,
+                email: userRecord.email,
+                displayName: userRecord.displayName,
+                photoURL: userRecord.photoURL,
+            });
         })
         .catch((error) => {
             // Error occurred while retrieving the user data
